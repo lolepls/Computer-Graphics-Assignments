@@ -5,7 +5,11 @@ function draw() {
 	line(-0.5, 0.3,0.3, 0.3);
 	line(-0.5, -0.3, 0.3,-0.3);
 
-//Now let's start drawing the half circle. We need to approximate it with 64 straight lines: so we have to find 64 points that lay on the half circle and we need to connect them with a line. Since we have to cover an angle of pi (from -pi/2 to pi/2), each point will have an angular distance from its neighbors of pi/64.  
+/*
+Now let's start drawing the half circle. We need to approximate it with 64 straight lines: so we have to find 64 points 
+that lay on the half circle and we need to connect them with a line. Since we have to cover an angle of pi (from -pi/2 to pi/2), each point will have 
+an angular distance from its neighbors of pi/64. 
+*/
 
 	var pi = Math.PI;
 	var step = pi/64; 
