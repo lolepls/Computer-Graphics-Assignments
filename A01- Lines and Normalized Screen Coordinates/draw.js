@@ -1,6 +1,8 @@
 function draw() {
 
-//This section simply draws the horizontal lines and the vertical one.
+/*
+This section simply draws the horizontal lines and the vertical one.
+*/
 	line(-0.5, 0.3,-0.5,-0.3);
 	line(-0.5, 0.3,0.3, 0.3);
 	line(-0.5, -0.3, 0.3,-0.3);
