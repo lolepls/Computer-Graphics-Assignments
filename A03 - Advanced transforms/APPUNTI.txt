@@ -1,0 +1,29 @@
+INVERSA DELLE TRASFORMAZIONI
+
+Le trasformazioni possono essere invertite per riportare un oggetto nella sua posizione originale, ma anche alla sua dimensione e orientamento originali.
+Per farlo è sufficiente ottenere l'inversa della matrice della trasformazione e applicarla.
+Ricordati che il flattening non può essere invertito poiché una o più componenti vengono azzerate. Inoltre non si può invertire una trasformazione anche nel caso in cui il risultato della stessa sia quello di ottenere due assi perfettamente sovrapposti.
+
+TRUCCHI
+
+Inversa della traslazione: 
+è una traslazione con i valori di segno opposto per dx, dy, dz.
+
+Inversa dello scaling:
+è uno scaling con 1/sx, 1/sy, 1/sz sulla diagonale.
+
+Inversa della rotazione:
+è una rotazione con l'angolo opposto a quello di partenza (es: +pi, -pi)
+
+COMPOSIZIONE DI TRASFORMAZIONI
+
+La composizione di due trasformazioni avviene moltiplicando le matrici tra di loro. Se si vuole prima ruotare e poi traslare, con la matrix on the left convention è:
+
+p' = T * R * p
+
+Le matrici si devono indicare in ordine inverso rispetto a quello dell'ordine delle trasformazioni.
+
+TRASFORMAZIONI INTORNO AD UN ASSE O CENTRO ARBITRARIO
+
+
+
