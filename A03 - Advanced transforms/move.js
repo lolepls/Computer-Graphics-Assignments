@@ -165,6 +165,26 @@ function computeS2Matrix(){
 
 }
 
+function computeI1Matrix(){
+/*
+Apply the inverse of the following sequence of transforms: rotation of 30 degree around the Y axis
+then Translation of (0, 0, 5), and finally a uniform scaling of a factor of 3.
+The original transformation was: p' = R*T*S*p
+So we have to implement the inverse: p = S*T*R*p'
+*/
+
+	var M = utils.identityMatrix(); //Returns a 4x4 identity matrix
+
+	M = utils.multiplyMatrices(M, utils.MakeRotateYMatrix(-30)); //Apply the inverse rotation of -30 degrees
+        M = utils.multiplyMatrices(M, utils.MakeTranslateMatrix(0,0,-5)); //Apply the inverse of the tranlsation
+
+	M = utils.multiplyMatrices(M, utils.MakeScaleMatrix(1/3)); //Apply the inverse of the uniform scaling
+
+	
+	return M;
+
+}
+
 function move() {
 	// Rotate 60 degrees around an arbitrary axis passing through (0,1,-1). The x-axis can be aligned to the arbitrary axis after a rotation of 45 degrees around the z-axis, and then 15 degrees around the y-axis.
 	var R1 = computeR1Matrix();
@@ -176,10 +196,7 @@ function move() {
 	var S2 = computeS2Matrix();
 			   
 	// Apply the inverse of the following sequence of transforms: rotation of 30 degree around the Y axis then Translation of (0, 0, 5), and finally a uniform scaling of a factor of 3.
-	var I1 =  [1.0,		0.0,		0.0,		0.0,
-			   0.0,		1.0,		0.0,		0.0,
-			   0.0,		0.0,		1.0,		0.0,
-			   0.0,		0.0,		0.0,		1.0];
+	var I1 = computeI1Matrix();
 
 	return [R1, S1, S2, I1];
 }
