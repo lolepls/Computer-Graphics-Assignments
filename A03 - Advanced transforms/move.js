@@ -57,9 +57,11 @@ function computeR1Matrix(){
 
 	var iRy = utils.invertMatrix(Ry);
 
-	/*Now we compose the trasformations according to the matrix-on-the-left convention:
+	/*
+	  Now we compose the trasformations according to the matrix-on-the-left convention:
 	  p' = T*Ry*Rz * Rx * iRz*iRy*iT * p
-	  We will return a matrix M which is the composition of those transformations.
+	  We will return a matrix M which is the composition of those transformations. The multiplication of the 
+	  matrixes will be done by exploiting a library function. We only have to take care of the order of the operations.
 	*/  
 
 	var M = utils.multiplyMatrices(T, Ry);
@@ -72,15 +74,53 @@ function computeR1Matrix(){
 	return M;
 }
 
+function computeS1Matrix(){
+// Half the size of the object along a line that bisects the positive x and y axes on the xy-plane.
+
+	/*
+  	In order to perform requested scaling we have to align the x axis to the bisector of the xy positive plane. This can be
+  	obtained with a rotation of +45 degrees around the z-axis.
+	*/
+
+	var gamma = utils.degToRad(45);
+	var cosgamma = Math.cos(gamma);
+	var sengamma = Math.sin(gamma);
+
+	var Rz =          [cosgamma,	-sengamma,	0.0,		0.0,
+			   sengamma,	cosgamma,	0.0,		0.0,
+			   0.0,		0.0,		1.0,		0.0,
+			   0.0,		0.0,		0.0,		1.0];
+
+	var iRz = utils.invertMatrix(Rz);
+
+	//The scaling is simply a matrix with s = 0.5 on the x axis:
+
+	var Sx =          [0.5,		0.0,		0.0,		0.0,
+			   0.0,		1.0,		0.0,		0.0,
+			   0.0,		0.0,		1.0,		0.0,
+			   0.0,		0.0,		0.0,		1.0];
+
+	/*
+	  In the end, we return the matrix M which perform the composition of the transformations in order to achieve the result.
+          p' = M * p
+	  M = Rz*Sx*iRz
+	*/
+	
+	var M = utils.multiplyMatrices(Rz, Sx);
+	M = utils.multiplyMatrices(M, iRz);
+
+	return M;
+
+
+
+}
+
 function move() {
 	// Rotate 60 degrees around an arbitrary axis passing through (0,1,-1). The x-axis can be aligned to the arbitrary axis after a rotation of 45 degrees around the z-axis, and then 15 degrees around the y-axis.
 	var R1 = computeR1Matrix();
 				   
 	// Half the size of the object along a line that bisects the positive x and y axes on the xy-plane. 
-	var S1 = [1.0,		0.0,		0.0,		0.0,
-			   0.0,		1.0,		0.0,		0.0,
-			   0.0,		0.0,		1.0,		0.0,
-			   0.0,		0.0,		0.0,		1.0];
+	var S1 = computeS1Matrix();
 			   
 	// Mirror the starship along a plane passing through (1,1,1), and obtained rotating 15 degree around the x axis the xz plane
 	var S2 =  [1.0,		0.0,		0.0,		0.0,
