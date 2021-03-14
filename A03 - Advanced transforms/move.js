@@ -17,7 +17,7 @@ function computeR1Matrix(){
 	var senalfa = Math.sin(alfa);
 
 
-	var Rx  =         [1.0,		0.0,		0.0,		0.0,
+	var Rx  = [1.0,		0.0,		0.0,		0.0,
 			   0.0,		cosalfa,	-senalfa,	0.0,
 			   0.0,		senalfa,	cosalfa,	0.0,
 			   0.0,		0.0,		0.0,		1.0];
@@ -25,9 +25,9 @@ function computeR1Matrix(){
 	
 
 	//This is the matrix for the translation of the point. Both T and its inverse will be needed.
-	var T  =          [1.0,		0.0,		0.0,		0.0,
+	var T  =  [1.0,		0.0,		0.0,		0.0,
 			   0.0,		1.0,		0.0,		1.0,
-			   0.0,		0.0,		1.0,	       -1.0,
+			   0.0,		0.0,		1.0,	    -1.0,
 			   0.0,		0.0,		0.0,		1.0];
 	var iT = utils.invertMatrix(T);
 
@@ -37,10 +37,10 @@ function computeR1Matrix(){
 	var cosgamma = Math.cos(gamma);
 	var sengamma = Math.sin(gamma);
 
-	var Rz =          [cosgamma,	-sengamma,	0.0,		0.0,
+	var Rz =  [cosgamma,	-sengamma,	0.0,		0.0,
 			   sengamma,	cosgamma,	0.0,		0.0,
-			   0.0,		0.0,		1.0,		0.0,
-			   0.0,		0.0,		0.0,		1.0];
+			   0.0,		0.0,		    1.0,		0.0,
+			   0.0,		0.0,		    0.0,		1.0];
 
 	var iRz = utils.invertMatrix(Rz);
 
@@ -50,10 +50,10 @@ function computeR1Matrix(){
 	var cosbeta = Math.cos(beta);
 	var senbeta = Math.sin(beta);
 
-	var Ry =          [cosbeta,	0.0,		senbeta,	0.0,
-			   0.0,		1.0,		0.0,		0.0,
+	var Ry =  [cosbeta,	    0.0,		senbeta,	0.0,
+			   0.0,		    1.0,		0.0,		0.0,
 			   -senbeta,	0.0,		cosbeta,	0.0,
-			   0.0,		0.0,		0.0,		1.0];
+			   0.0,		    0.0,		0.0,		1.0];
 
 	var iRy = utils.invertMatrix(Ry);
 
@@ -87,16 +87,16 @@ function computeS1Matrix(){
 	var cosgamma = Math.cos(gamma);
 	var sengamma = Math.sin(gamma);
 
-	var Rz =          [cosgamma,	-sengamma,	0.0,		0.0,
+	var Rz =  [cosgamma,	-sengamma,	0.0,		0.0,
 			   sengamma,	cosgamma,	0.0,		0.0,
-			   0.0,		0.0,		1.0,		0.0,
-			   0.0,		0.0,		0.0,		1.0];
+			   0.0,		0.0,		    1.0,		0.0,
+			   0.0,		0.0,		    0.0,		1.0];
 
 	var iRz = utils.invertMatrix(Rz);
 
 	//The scaling is simply a matrix with s = 0.5 on the x axis:
 
-	var Sx =          [0.5,		0.0,		0.0,		0.0,
+	var Sx =  [0.5,		0.0,		0.0,		0.0,
 			   0.0,		1.0,		0.0,		0.0,
 			   0.0,		0.0,		1.0,		0.0,
 			   0.0,		0.0,		0.0,		1.0];
@@ -125,9 +125,9 @@ function computeS2Matrix(){
 	*/
 
 	//This is the matrix for the translation. Both T and its inverse will be needed.
-	var T  =          [1.0,		0.0,		0.0,		1.0,
+	var T  =  [1.0,		0.0,		0.0,		1.0,
 			   0.0,		1.0,		0.0,		1.0,
-			   0.0,		0.0,		1.0,	        1.0,
+			   0.0,		0.0,		1.0,	    1.0,
 			   0.0,		0.0,		0.0,		1.0];
 	var iT = utils.invertMatrix(T);
 	
@@ -137,7 +137,7 @@ function computeS2Matrix(){
 	var senalfa = Math.sin(alfa);
 
 
-	var Rx  =         [1.0,		0.0,		0.0,		0.0,
+	var Rx  = [1.0,		0.0,		0.0,		0.0,
 			   0.0,		cosalfa,	-senalfa,	0.0,
 			   0.0,		senalfa,	cosalfa,	0.0,
 			   0.0,		0.0,		0.0,		1.0];
@@ -146,7 +146,7 @@ function computeS2Matrix(){
 
 	//The mirroring w.r.t. the plane xz is simply a matrix with s = -1 on the y axis:
 
-	var Sy =          [1.0,		0.0,		0.0,		0.0,
+	var Sy =  [1.0,		0.0,		0.0,		0.0,
 			   0.0,		-1.0,		0.0,		0.0,
 			   0.0,		0.0,		1.0,		0.0,
 			   0.0,		0.0,		0.0,		1.0];
