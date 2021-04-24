@@ -35,11 +35,10 @@ function shaders() {
 // vec4 ambientColor;
 
 // Single directional light, constant ambient
-var S1 = `
-	OlightDir = Dir;
-	OlightColor = lightColor;
-	
-	ambientColor = ambientLightColor;
+var S1 = `OlightDir = Dir;
+OlightColor = lightColor;
+
+ambientColor = ambientLightColor;
 `;
 
 // Single point light without decay
@@ -50,16 +49,54 @@ var S2 = `
 
 // Single spot light (without decay), constant ambient
 var S3 = `
+
+//The direction is the same as the point light
+OlightDir = normalize(Pos -  fs_pos);
+
+//We have first to compute the values cIn and cOut:
+
+//cIn is the cosine of half the ConeIn value (which is a percentage of the ConeOut)
+float cIn = cos(radians(ConeOut*ConeIn/2.0));
+
+//cOut is the cosine of half the ConeOut value
+float cOut = cos(radians(ConeOut/2.0));
+
+//We compute the formula for the lightColor:
+OlightColor = lightColor * (clamp((((dot(OlightDir, Dir))- cOut)/(cIn - cOut)), 0.0, 1.0));
+
+ambientColor = ambientLightColor;
 	
 `;
 
 // Single point light with decay
 var S4 = `
+
+OlightDir = normalize(Pos - fs_pos);
+OlightColor = lightColor * pow(Target / length(Pos - fs_pos), Decay);
+
+ambientColor = ambientLightColor;
 	
 `;
 
 // Single spot light (with decay)
 var S5 = `
+
+//The direction is the same as the point light
+OlightDir = normalize(Pos -  fs_pos);
+
+//We have first to compute the values cIn and cOut:
+
+//cIn is the cosine of half the ConeIn value (which is a percentage of the ConeOut)
+float cIn = cos(radians(ConeOut*ConeIn/2.0));
+
+//cOut is the cosine of half the ConeOut value
+float cOut = cos(radians(ConeOut/2.0));
+
+//We compute the formula for the lightColor by adding also the decay:
+OlightColor = lightColor * pow(Target / length(Pos - fs_pos), Decay) * (clamp((((dot(OlightDir, Dir))- cOut)/(cIn - cOut)), 0.0, 1.0));
+
+ambientColor = ambientLightColor;
+
 	
 `;
 
