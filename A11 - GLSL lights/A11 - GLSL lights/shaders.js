@@ -102,11 +102,24 @@ ambientColor = ambientLightColor;
 
 // Single point light, hemispheric ambient 
 var S6 = `
+
+OlightDir = normalize(Pos - fs_pos);
+OlightColor = lightColor * pow(Target / length(Pos - fs_pos), Decay);
+
+ambientColor = ((dot(normalVec, ADir) + 1.0) / 2.0) * ambientLightColor + ambientLightLowColor * ((1.0-dot(normalVec, ADir))/2.0);
 	
 `;
 
 // Single spot light, spherical harmonics ambient
 var S7 = `
+
+OlightDir = normalize(Pos -  fs_pos);
+float cIn = cos(radians(ConeOut*ConeIn/2.0));
+float cOut = cos(radians(ConeOut/2.0));
+OlightColor = lightColor * pow(Target / length(Pos - fs_pos), Decay) * (clamp((((dot(OlightDir, Dir))- cOut)/(cIn - cOut)), 0.0, 1.0));
+
+ambientColor = SHconstColor + SHDeltaLxColor*normalVec.x + SHDeltaLyColor*normalVec.y + SHDeltaLzColor*normalVec.z;
+
 
 `;
 	return [S1, S2, S3, S4, S5, S6, S7];
