@@ -1,12 +1,165 @@
+//Here some functions defined by me in order to have it easier when computing normals:
+
 function normalize(vector){
 
-	var norm = vector[0]**2 + vector[1]**2 + vector[2]**2;
+	var norm = Math.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2);
 
 	vector[0] = vector[0]/norm;
 	vector[1] = vector[1]/norm;
 	vector[2] = vector[2]/norm;
 
 	return vector;
+
+}
+
+function cross(a, b){
+
+	var result = [0.0, 0.0, 0.0];
+
+	result[0] = a[1]*b[2] - a[2]*b[1];
+	result[1] = a[2]*b[0] - a[0]*b[2];
+	result[2] = a[0]*b[1] - a[1]*b[0];
+
+	return result;
+
+}
+
+function sub(a, b){
+
+	return[a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+
+}
+
+//Find the middle point of the segment with vertices vector1 and vector2.
+function middlepoint(vector1, vector2){
+
+		var result = [
+			(vector1[0]+vector2[0])/2,
+			(vector1[1]+vector2[1])/2, 
+			(vector1[2]+vector2[2])/2,
+			0,
+			0,
+			0
+		];
+
+		return result;
+
+}
+
+//This function takes three vec3 variables representing vertices of a triangle in lockwise order and returns the normal of the triangle.
+function compute_triangle_normal(a, b, c){
+
+	var vec1 = sub(b, a);
+	var vec2 = sub (c, a);
+
+	var nvec = cross(vec1, vec2);
+	nvec = normalize(nvec);
+	console.log(nvec);
+	return nvec;
+
+}
+
+//This function algorithmically builds a sphere starting from an octahedron.
+function buildSphere(sphere){
+
+	vert3 = [];
+	ind3 = [];
+
+	//Let's start by creating an octahedron
+
+	vert3 = [
+
+		[0,-1,0, 0, 0, 0], [1,0,0, 0,0,0],
+		[0,0,1, 0,0,0], [-1,0,0, 0,0,0],
+		[0,0,-1, 0,0,0], [0,1,0, 0,0,0]
+
+	]
+
+	ind3 = [  //All the triangles have the vertices specified in clockwise order.
+		0,1,2,
+		0,2,3,
+		0,3,4,
+		0,4,1,
+		1,5,2,
+		2,5,3,
+		3,5,4,
+		4,5,1,
+	]
+
+	//Now we have to recursively split the edges and normalize the distance of the points:
+	var iterations = 5; //Leave this reasonably low (4 or 5) or the algorithm will take too much time
+
+	
+	for(i=0; i<iterations; i++){ //For each iteration, we split each face of the pyramid into 4 more faces
+
+		var newVert3 = [];
+		var newInd3 = [];
+		var d = 0;
+		var k = 0;
+		var faces = ind3.length / 3;
+
+		for(j=0; j<faces; j++){  //This is the algorithm that split the single face. It is repeated for each face.
+
+
+			//For each face, I retrieve its vertices by reading indexes in triplets
+			var vertex0_index = ind3[(j*3)];
+			var vertex1_index = ind3[(j*3)+1];
+			var vertex2_index = ind3[(j*3)+2];
+
+			var vertex0 = vert3[vertex0_index];
+			var vertex1 = vert3[vertex1_index];
+			var vertex2 = vert3[vertex2_index];
+
+			//I add a point in the middle of each vertex by using a custom function:
+			var midpoint_01 = middlepoint(vertex0, vertex1);
+			var midpoint_02 = middlepoint(vertex0, vertex2);
+			var midpoint_12 = middlepoint(vertex1, vertex2);
+
+
+			//I normalize the distance of each point by using a custom function
+			midpoint_01 = normalize(midpoint_01);
+			midpoint_02 = normalize(midpoint_02);
+			midpoint_12 = normalize(midpoint_12);
+
+			//I add the vertices to a new vertices vector:
+			newVert3[d] = vertex0;
+			newVert3[d+1] = vertex1;
+		    newVert3[d+2] = vertex2;
+			newVert3[d+3] = midpoint_01;
+			newVert3[d+4] = midpoint_02;
+			newVert3[d+5] = midpoint_12;
+			
+
+			//I add the indexes to the array respecting the clockwise order of each triangle:
+			newInd3[k] = d; //vertex0
+			newInd3[k+1] = d+3; //midpoint_01
+			newInd3[k+2] = d+4; //midpoint_02
+
+			newInd3[k+3] = d+3; //midpoint_01
+			newInd3[k+4] = d+1; //vertex1
+			newInd3[k+5] = d+5; //midpoint_12
+
+			newInd3[k+6] = d+4; //midpoint_02
+			newInd3[k+7] = d+5; //midpoint_12
+			newInd3[k+8] = d+2; //vertex2
+
+			newInd3[k+9] = d+3; //midpoint_01
+			newInd3[k+10] = d+5; //midpoint_12
+			newInd3[k+11] = d+4;//midpoint_02
+			
+			//Increment of indexes used in the arrays:
+			k = k+12;
+			d = d+6;
+		}
+
+		//When all the faces are completed, the result is treated as a new polyhedron.
+		vert3 = newVert3;
+		ind3 = newInd3;
+	}
+
+	sphere.vert = vert3;
+	sphere.ind = ind3;
+	return sphere;
 
 }
 
@@ -23,27 +176,97 @@ function buildGeometry() {
 	addMesh(vert1, ind1, color1);
 	
 	// Draws a cube -- To do for the assignment.
-	var vert2 = [[-1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,1.0,0.0, 0.0, 0.0,1.0], [-1.0,1.0,0.0, 0.0, 0.0,1.0]];
-	var ind2 = [0, 1, 2,  0, 2, 3];
+	var vert2 = [
+
+		[-1, -1, 1, 0,0,0], 
+		[1, -1, 1, 0,0,0],
+		[1, 1, 1, 0,0,0],
+		
+		[-1, -1, 1, 0,0,0],
+		[1, 1, 1, 0,0,0],
+		[-1, 1, 1, 0,0,0],
+		
+		[1, -1, 1, 0,0,0],
+		[1, -1, -1, 0,0,0],
+		[1, 1, -1, 0,0,0],
+		
+		[1, -1, 1, 0,0,0],
+		[1, 1, -1, 0,0,0],
+		[1, 1, 1, 0,0,0],
+		
+		[1, -1, -1, 0,0,0],
+		[-1, -1, -1, 0,0,0],
+		[-1, 1, -1, 0,0,0],
+		
+		[1, -1, -1, 0,0,0],
+		[-1, 1, -1, 0,0,0],
+		[1, 1, -1, 0,0,0],
+		
+		[-1, -1, -1, 0,0,0],
+		[-1, -1, 1, 0,0,0],
+		[-1, 1, 1, 0,0,0],
+		
+		[-1, -1, -1, 0,0,0],
+		[-1, 1, 1, 0,0,0],
+		[-1, 1, -1, 0,0,0],
+		
+		[-1, 1, 1, 0,0,0],
+		[1, 1, 1, 0,0,0],
+		[1, 1, -1, 0,0,0],
+		
+		[-1, 1, 1, 0,0,0],
+		[1, 1, -1, 0,0,0],
+		[-1, 1, -1, 0,0,0],
+		
+		[1, -1, 1, 0,0,0],
+		[-1, -1, -1, 0,0,0],
+		[1, -1, -1, 0,0,0],
+		
+		[1, -1, 1, 0,0,0],
+		[-1, -1, 1, 0,0,0],
+		[-1, -1, -1, 0,0,0]
+		
+		];
+
+	var ind2 = [ 0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14, 15,16,17, 18,19,20, 21,22,23, 24,25,26, 27,28,29, 30,31,32, 33,34,35 ];
+	
+	//I now loop through all the faces (each triangle) and compute its normal:
+
+	for(i=0; i<=33; i=i+3){
+
+		var normal = compute_triangle_normal(vert2[i], vert2[i+1], vert2[i+2]);
+		vert2[i][3] = normal[0];
+		vert2[i][4] = normal[1];
+		vert2[i][5] = normal[2]; 
+
+		vert2[i+1][3] = normal[0];
+		vert2[i+1][4] = normal[1];
+		vert2[i+1][5] = normal[2]; 
+
+		vert2[i+2][3] = normal[0];
+		vert2[i+2][4] = normal[1];
+		vert2[i+2][5] = normal[2]; 
+	}
+	
 	var color2 = [0.0, 1.0, 1.0];
 	addMesh(vert2, ind2, color2);
 	
 	// Draws function y = sin(x) * cos(z) with -3 <= x <= 3 and -3 <= z <= 3 -- To do for the assignment.
 	var d = 0;
 	var y = 0;
-	vert2 = [];
+	vert3 = [];
 	for(z = -3; z <= 3; z++) {
 		for(x = -3; x <= 3; x++) {
 			
 			y = Math.sin(x) * Math.cos(z);
 			//Here for each vertex the normal is initialized at 0
-			vert2[d] = [x, y, z, 0, 0, 0];
+			vert3[d] = [x, y, z, 0, 0, 0];
 			d++
 		}
 	}
 
 	//Creates indices as a triangle list
-	ind2 = [];
+	ind3 = [];
 	var j = 0;
 	var i = 0;
 
@@ -51,93 +274,116 @@ function buildGeometry() {
 
 		for(k = 0; k<=5; k++){
 
-			ind2[j] = (i*7)+k+8;
+			ind3[j] = (i*7)+k+8;
 			j++;
-			ind2[j] = (i*7)+k+1;
+			ind3[j] = (i*7)+k+1;
 			j++;
-			ind2[j] = (i*7)+k;
+			ind3[j] = (i*7)+k;
 			j++;
 
 			//Here is the computation of the normal to the face:
-			var xv1 = vert2[(i*7)+k][0];
-			var yv1 = vert2[(i*7)+k][1];
-			var zv1 = vert2[(i*7)+k][2];
+			var veca = [vert3[(i*7)+k+8][0], vert3[(i*7)+k+8][1], vert3[(i*7)+k+8][2] ];
+			var vecb = [vert3[(i*7)+k+1][0], vert3[(i*7)+k+1][1], vert3[(i*7)+k+1][2] ];
+			var vecc = [vert3[(i*7)+k][0], vert3[(i*7)+k][1], vert3[(i*7)+k][2] ];
 
-			var xv2 = vert2[(i*7)+k+1][0];
-			var yv2 = vert2[(i*7)+k+1][1];
-			var zv2 = vert2[(i*7)+k+1][2];
+			vec1 = sub(vecb, veca);
+			vec2 = sub(vecc, veca);
 
-			var xv3 = vert2[(i*7)+k+8][0];
-			var yv3 = vert2[(i*7)+k+8][1];
-			var zv3 = vert2[(i*7)+k+8][2];
-
-			var v1 = [xv1, yv1, zv1];
-			var v2 = [xv2, yv2, zv2];
-			var v3 = [xv3, yv3, zv3];
-
-			var uvec = v2 - v1;
-			var vvec = v3 - v1;
-
-			var nx = uvec[1] * vvec[2] - uvec[2] * vvec[1];
-			var ny = uvec[2] * vvec[0] - uvec[0] * vvec[2];
-			var nz = uvec[0] * vvec[1] - uvec[1] * vvec[0];
-
-			var norm = [nx, ny, nz];
-			norm = normalize(norm);
-
-			nx = norm[0];
-			ny = norm[1];
-			nz = norm[2];
-
-			console.log(norm);
+			var nvec = cross(vec1, vec2);
+			nvec = normalize(nvec);
 			
-			//Now I add the normal to each vertex:
+			//Now I have to assign the normal to each vertex of the face:
+			vert3[(i*7)+k+8][3] = vert3[(i*7)+k+8][3] + nvec[0];
+			vert3[(i*7)+k+8][4] = vert3[(i*7)+k+8][4] + nvec[1];
+			vert3[(i*7)+k+8][5] = vert3[(i*7)+k+8][5] + nvec[2];
 
-			vert2[(i*7)+k][3] = vert2[(i*7)+k][3] + nx;
-			vert2[(i*7)+k][4] = vert2[(i*7)+k][4] + ny;
-			vert2[(i*7)+k][5] = vert2[(i*7)+k][5] + nz;
+			vert3[(i*7)+k+1][3] = vert3[(i*7)+k+1][3] + nvec[0];
+			vert3[(i*7)+k+1][4] = vert3[(i*7)+k+1][4] + nvec[1];
+			vert3[(i*7)+k+1][5] = vert3[(i*7)+k+1][5] + nvec[2];
 
-			vert2[(i*7)+k+1][3] =  vert2[(i*7)+k+1][3] + nx; 
-			vert2[(i*7)+k+1][4] = vert2[(i*7)+k+1][4] + ny; 
-			vert2[(i*7)+k+1][5] = vert2[(i*7)+k+1][5] + nz; 
+			vert3[(i*7)+k][3] = vert3[(i*7)+k][3] + nvec[0];
+			vert3[(i*7)+k][4] = vert3[(i*7)+k][4] + nvec[1];
+			vert3[(i*7)+k][5] = vert3[(i*7)+k][5] + nvec[2];
 
-			vert2[(i*7)+k+8][3] = vert2[(i*7)+k+8][3] + nx; 
-			vert2[(i*7)+k+8][4] =  vert2[(i*7)+k+8][4] + ny; 
-			vert2[(i*7)+k+8][5] =  vert2[(i*7)+k+8][5] + nz; 
+			//Now I have to normalize each vertex normal and reassign it
+			vertn1 = [ vert3[(i*7)+k+8][3], vert3[(i*7)+k+8][4], vert3[(i*7)+k+8][5]];
+			vertn1 = normalize(vertn1);
+			vert3[(i*7)+k+8][3] = vertn1[0];
+			vert3[(i*7)+k+8][4] = vertn1[1];
+			vert3[(i*7)+k+8][5] = vertn1[2];
+                               
+			vertn2 = [ vert3[(i*7)+k+1][3], vert3[(i*7)+k+1][4], vert3[(i*7)+k+1][5]];
+			vertn2 = normalize(vertn2);
+			vert3[(i*7)+k+1][3] = vertn2[0];
+			vert3[(i*7)+k+1][4] = vertn2[1];
+			vert3[(i*7)+k+1][5] = vertn2[2];
 
-			//Now I have to normalize each normal:
-			var normalized_vertex_normal = normalize([vert2[(i*7)+k][3], vert2[(i*7)+k][4], vert2[(i*7)+k][5]]);
-			vert2[(i*7)+k][3] = normalized_vertex_normal[0];
-			vert2[(i*7)+k][4] = normalized_vertex_normal[1];
-			vert2[(i*7)+k][5] = normalized_vertex_normal[2];
+			vertn3 = [ vert3[(i*7)+k][3], vert3[(i*7)+k][4], vert3[(i*7)+k][5]];
+			vertn3 = normalize(vertn3);
+			vert3[(i*7)+k][3] = vertn3[0];
+			vert3[(i*7)+k][4] = vertn3[1];
+			vert3[(i*7)+k][5] = vertn3[2];
 
-			normalized_vertex_normal = normalize([vert2[(i*7)+k+1][3], vert2[(i*7)+k+1][4], vert2[(i*7)+k+1][5]]);
-			vert2[(i*7)+k+1][3] = normalized_vertex_normal[0];
-			vert2[(i*7)+k+1][4] = normalized_vertex_normal[1];
-			vert2[(i*7)+k+1][5] = normalized_vertex_normal[2];
 
-			normalized_vertex_normal = normalize([vert2[(i*7)+k+8][3], vert2[(i*7)+k+8][4], vert2[(i*7)+k+8][5]]);
-			vert2[(i*7)+k+8][3] = normalized_vertex_normal[0];
-			vert2[(i*7)+k+8][4] = normalized_vertex_normal[1];
-			vert2[(i*7)+k+8][5] = normalized_vertex_normal[2];
-
-			///////
-			ind2[j] = (i*7)+k+7;
+			//////////////////////////////////////////////////////////////////7
+			ind3[j] = (i*7)+k+7;
 			j++;
-			ind2[j] = (i*7)+k+8;
+			ind3[j] = (i*7)+k+8;
 			j++;
-			ind2[j] = (i*7)+k;
+			ind3[j] = (i*7)+k;
 			j++;
+
+			//Vertex normals of the second face:
+
+			//Here is the computation of the normal to the face:
+			veca = [vert3[(i*7)+k+7][0], vert3[(i*7)+k+7][1], vert3[(i*7)+k+7][2] ];
+			vecb = [vert3[(i*7)+k+8][0], vert3[(i*7)+k+8][1], vert3[(i*7)+k+8][2] ];
+			vecc = [vert3[(i*7)+k][0], vert3[(i*7)+k][1], vert3[(i*7)+k][2] ];
+
+			vec1 = sub(vecb, veca);
+			vec2 = sub(vecc, veca);
+
+			nvec = cross(vec1, vec2);
+			nvec = normalize(nvec);
+			
+			//Now I have to assign the normal to each vertex of the face:
+			vert3[(i*7)+k+7][3] = vert3[(i*7)+k+7][3] + nvec[0];
+			vert3[(i*7)+k+7][4] = vert3[(i*7)+k+7][4] + nvec[1];
+			vert3[(i*7)+k+7][5] = vert3[(i*7)+k+7][5] + nvec[2];
+
+			vert3[(i*7)+k+8][3] = vert3[(i*7)+k+8][3] + nvec[0];
+			vert3[(i*7)+k+8][4] = vert3[(i*7)+k+8][4] + nvec[1];
+			vert3[(i*7)+k+8][5] = vert3[(i*7)+k+8][5] + nvec[2];
+
+			vert3[(i*7)+k][3] = vert3[(i*7)+k][3] + nvec[0];
+			vert3[(i*7)+k][4] = vert3[(i*7)+k][4] + nvec[1];
+			vert3[(i*7)+k][5] = vert3[(i*7)+k][5] + nvec[2];
+
+			//Now I have to normalize each vertex normal and reassign it
+			vertn1 = [ vert3[(i*7)+k+7][3], vert3[(i*7)+k+7][4], vert3[(i*7)+k+7][5]];
+			vertn1 = normalize(vertn1);
+			vert3[(i*7)+k+7][3] = vertn1[0];
+			vert3[(i*7)+k+7][4] = vertn1[1];
+			vert3[(i*7)+k+7][5] = vertn1[2];
+                               
+			vertn2 = [ vert3[(i*7)+k+8][3], vert3[(i*7)+k+8][4], vert3[(i*7)+k+8][5]];
+			vertn2 = normalize(vertn2);
+			vert3[(i*7)+k+8][3] = vertn2[0];
+			vert3[(i*7)+k+8][4] = vertn2[1];
+			vert3[(i*7)+k+8][5] = vertn2[2];
+
+			vertn3 = [ vert3[(i*7)+k][3], vert3[(i*7)+k][4], vert3[(i*7)+k][5]];
+			vertn3 = normalize(vertn3);
+			vert3[(i*7)+k][3] = vertn3[0];
+			vert3[(i*7)+k][4] = vertn3[1];
+			vert3[(i*7)+k][5] = vertn3[2];
+
 
 		}
 	}
 
-
-	//This loop normalizes the normal:
-
-
-	color2 = [0.0, 0.5, 1.0];
-	addMesh(vert2, ind2, color2);
+	color3 = [0.0, 0.5, 1.0];
+	addMesh(vert3, ind3, color3);
 
 	
 	// Draws a Cylinder --- To do for the assignment
@@ -147,8 +393,24 @@ function buildGeometry() {
 	addMesh(vert4, ind4, color4);
 
 	// Draws a Sphere --- To do for the assignment.
-	var vert5 = [[-1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,1.0,0.0, 0.0, 0.0,1.0], [-1.0,1.0,0.0, 0.0, 0.0,1.0]];
-	var ind5 = [0, 1, 2,  0, 2, 3];
+	//Here I create the Sphere object in order to build a sphere with an algorithm.
+	var sphere = {
+		vert: [0,0,0],
+		ind: [0,0,0],
+	}
+
+	sphere = buildSphere(sphere);
+
+	var vert5 = sphere.vert;
+	var ind5 = sphere.ind;
+
+	//Now we have to compute the normal for each face.
+	var triangles = ind5.length/3;
+
+	for(i=0; i<triangles; i=i+3){
+		
+	}
+
 	var color5 = [1.0, 0.0, 0.0];
 	addMesh(vert5, ind5, color5);
 }
