@@ -46,7 +46,7 @@ function middlepoint(vector1, vector2){
 
 }
 
-//This function takes three vec3 variables representing vertices of a triangle in lockwise order and returns the normal of the triangle.
+//This function takes three vec3 variables representing vertices of a triangle in clockwise order and returns the normal of the triangle.
 function compute_triangle_normal(a, b, c){
 
 	var vec1 = sub(b, a);
@@ -54,7 +54,7 @@ function compute_triangle_normal(a, b, c){
 
 	var nvec = cross(vec1, vec2);
 	nvec = normalize(nvec);
-	console.log(nvec);
+	//console.log(nvec);
 	return nvec;
 
 }
@@ -69,21 +69,37 @@ function buildSphere(sphere){
 
 	vert3 = [
 
-		[0,-1,0, 0, 0, 0], [1,0,0, 0,0,0],
+		/*[0,-1,0, 0,0,0], [1,0,0, 0,0,0],
 		[0,0,1, 0,0,0], [-1,0,0, 0,0,0],
-		[0,0,-1, 0,0,0], [0,1,0, 0,0,0]
+		[0,0,-1, 0,0,0], [0,1,0, 0,0,0]*/
+
+		[0,0,1, 0,0,0], [1,0,0, 0,0,0],
+		[0,1,0, 0,0,0], [-1,0,0, 0,0,0],
+		[0,-1,0, 0,0,0], [0,0,-1, 0,0,0]
+
 
 	]
 
 	ind3 = [  //All the triangles have the vertices specified in clockwise order.
-		0,1,2,
+		/*0,1,2,
 		0,2,3,
 		0,3,4,
 		0,4,1,
 		1,5,2,
 		2,5,3,
 		3,5,4,
+		4,5,1,*/
+
+		1,5,2,
+		1,0,4,
+		2,5,3,
+		4,0,3,
+		3,5,4,
+		3,0,2,
 		4,5,1,
+		2,0,1
+
+
 	]
 
 	//Now we have to recursively split the edges and normalize the distance of the points:
@@ -98,7 +114,7 @@ function buildSphere(sphere){
 		var k = 0;
 		var faces = ind3.length / 3;
 
-		for(j=0; j<faces; j++){  //This is the algorithm that split the single face. It is repeated for each face.
+		for(j=0; j<faces; j++){  //This is the algorithm that splits the single face. It is repeated for each face.
 
 
 			//For each face, I retrieve its vertices by reading indexes in triplets
@@ -135,17 +151,17 @@ function buildSphere(sphere){
 			newInd3[k+1] = d+3; //midpoint_01
 			newInd3[k+2] = d+4; //midpoint_02
 
-			newInd3[k+3] = d+3; //midpoint_01
-			newInd3[k+4] = d+1; //vertex1
-			newInd3[k+5] = d+5; //midpoint_12
+			newInd3[k+3] = d+1; //vertex1
+			newInd3[k+4] = d+5; //midpoint_12
+			newInd3[k+5] = d+3; //midpoint_01
 
-			newInd3[k+6] = d+4; //midpoint_02
-			newInd3[k+7] = d+5; //midpoint_12
-			newInd3[k+8] = d+2; //vertex2
+			newInd3[k+6] = d+2; //vertex2
+			newInd3[k+7] = d+4; //midpoint_02
+			newInd3[k+8] = d+5; //midpoint_12
 
-			newInd3[k+9] = d+3; //midpoint_01
-			newInd3[k+10] = d+5; //midpoint_12
-			newInd3[k+11] = d+4;//midpoint_02
+			newInd3[k+9] = d+5; //midpoint_12
+			newInd3[k+10] = d+4; //midpoint_02
+			newInd3[k+11] = d+3;//midpoint_01
 			
 			//Increment of indexes used in the arrays:
 			k = k+12;
@@ -174,8 +190,15 @@ function buildGeometry() {
 	var ind1 = [0, 1, 2,  3, 4, 5,  6, 7, 8,  9, 10, 11,  12, 13, 14,  12, 14, 15];
 	var color1 = [0.0, 0.0, 1.0];
 	addMesh(vert1, ind1, color1);
+
+	/**************************************************************************/
 	
 	// Draws a cube -- To do for the assignment.
+
+	// Here each triangle that makes the cube is considered with independent vertices. This means that
+	// vertices are duplicated, and each face is made of single triangles. This allows us to have a different
+	// lighting for each face without smoothing effect.
+
 	var vert2 = [
 
 		[-1, -1, 1, 0,0,0], 
@@ -230,7 +253,8 @@ function buildGeometry() {
 
 	var ind2 = [ 0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14, 15,16,17, 18,19,20, 21,22,23, 24,25,26, 27,28,29, 30,31,32, 33,34,35 ];
 	
-	//I now loop through all the faces (each triangle) and compute its normal:
+	//I now loop through all the faces (each triangle) and compute its normal. Each vertex of the triangle
+	// has assigned the normal of its face, without interference from the other faces.
 
 	for(i=0; i<=33; i=i+3){
 
@@ -250,11 +274,14 @@ function buildGeometry() {
 	
 	var color2 = [0.0, 1.0, 1.0];
 	addMesh(vert2, ind2, color2);
-	
+
+	//**********************************************************************//
+
 	// Draws function y = sin(x) * cos(z) with -3 <= x <= 3 and -3 <= z <= 3 -- To do for the assignment.
 	var d = 0;
 	var y = 0;
 	vert3 = [];
+
 	for(z = -3; z <= 3; z++) {
 		for(x = -3; x <= 3; x++) {
 			
@@ -385,12 +412,15 @@ function buildGeometry() {
 	color3 = [0.0, 0.5, 1.0];
 	addMesh(vert3, ind3, color3);
 
+	/*************************************************************************/
 	
 	// Draws a Cylinder --- To do for the assignment
 	var vert4 = [[-1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,1.0,0.0, 0.0, 0.0,1.0], [-1.0,1.0,0.0, 0.0, 0.0,1.0]];
 	var ind4 = [0, 1, 2,  0, 2, 3];
 	var color4 = [1.0, 1.0, 0.0];
 	addMesh(vert4, ind4, color4);
+
+	/*************************************************************************/
 
 	// Draws a Sphere --- To do for the assignment.
 	//Here I create the Sphere object in order to build a sphere with an algorithm.
@@ -403,14 +433,21 @@ function buildGeometry() {
 
 	var vert5 = sphere.vert;
 	var ind5 = sphere.ind;
+	//console.log(ind5);
 
-	//Now we have to compute the normal for each face.
-	var triangles = ind5.length/3;
+	//Now we have to compute the normal for each vertex. This is quite easy, since the normal for each vertex is in the same direction
+	// that points to the center of the sphere. The normal direction is the same position of the point, since the center is in 0,0,0 and
+	// the radius of the sphere is 1.
 
-	for(i=0; i<triangles; i=i+3){
-		
+	for(i=0; i<vert5.length; i++){
+
+
+		vert5[i][3] = vert5[i][0];
+		vert5[i][4] = vert5[i][1];
+		vert5[i][5] = vert5[i][2];
+
 	}
 
-	var color5 = [1.0, 0.0, 0.0];
+	var color5 = [0.0, 0.5, 0.3];
 	addMesh(vert5, ind5, color5);
 }
