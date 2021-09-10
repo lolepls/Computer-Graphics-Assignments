@@ -415,9 +415,107 @@ function buildGeometry() {
 	/*************************************************************************/
 	
 	// Draws a Cylinder --- To do for the assignment
-	var vert4 = [[-1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,-1.0,0.0, 0.0, 0.0,1.0], [1.0,1.0,0.0, 0.0, 0.0,1.0], [-1.0,1.0,0.0, 0.0, 0.0,1.0]];
-	var ind4 = [0, 1, 2,  0, 2, 3];
+	var R = 2.0;
+	var h = 4.0;
+
+	var vert4 = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, h, 0.0, 0.0, 0.0]];
+	var ind4 = [];
 	var color4 = [1.0, 1.0, 0.0];
+
+	var center =[0.0, 0.0, 0.0];
+
+	// I will now build algotirhmically the cylinder.
+
+	var slices = 40;
+	var step = (2*Math.PI) / slices;
+	var j=2;
+
+
+	for(i = 0; i<2*Math.PI; i = i + step){
+
+		// At first I generate the vertices for the two circular basis.
+		vert4[j] = [R*Math.sin(i), R*Math.cos(i), 0.0, 0.0, 0.0, 0.0];
+		vert4[j+slices] = [R*Math.sin(i), R*Math.cos(i), h, 0.0, 0.0, 0.0];
+		j++;
+
+		// From the second iteration, I add both the indexing for the triangles on the basis and for the triangles of the sides:
+		if (j>2 && j<slices+2){
+
+			ind4.push(0,j-1,j);
+			ind4.push(1, j+slices, (j-1)+slices);
+
+			ind4.push(j, j-1, (j-1)+slices);
+			ind4.push((j-1)+slices, j+slices, j);
+
+		}
+
+
+
+		//This is needed to add the last triangle, in order to connect it to the initial one and not to leave "holes" in the structure.
+		if(j == slices+2){
+
+
+			//This connects the last vertex to the initial one (the one with index 2, since indexes 0 and 1 contain the centres).
+			ind4.push(0, j-1, 2);
+			ind4.push(1,2+slices, (j-1)+slices);
+
+			// Same but for the other basis.
+			ind4.push(2, (j-1), (j-1)+slices);
+			ind4.push((j-1)+slices, 2+slices, 2);
+
+		}
+	}
+
+
+	//Now I will have to compute vertex normals with an algorithm I designed.
+
+	var triangles = (ind4.length) / 3;
+
+	for(i=0; i<vert4.length; i++){
+
+		// For each vertex I loop through all the triangles, and, if a triangle has the i-th vertex, I compute the normal of the triangle.
+		// Then I sum the value of the triangle normal to the already existing one of the vertex. The latter is weighted with "shares", in order to
+		// keep track of the number of triangles that share that vertex and obtain an accurate value.
+		var shares = 0;
+
+		for(j=0; j<triangles; j++){
+
+			var triangle_vertices = [ind4[(j*3)], ind4[(j*3)+1], ind4[(j*3)+2]];
+
+			if(triangle_vertices.includes(i)){
+
+				//If a triangle uses the i-th vertex, I compute the normal of the triangle:
+				var normal = compute_triangle_normal(vert4[triangle_vertices[0]], vert4[triangle_vertices[1]], vert4[triangle_vertices[2]]);
+				normal = normalize(normal);
+
+				//console.log(normal);
+
+				var vertex_normal = [0.0, 0.0, 0.0];
+
+				// I weight the existing vertex normal with "shares" and I add the newly computed triangle normal
+				vertex_normal[0] = vert4[i][3]*shares + normal[0];
+				vertex_normal[1] = vert4[i][4]*shares + normal[1];
+				vertex_normal[2] = vert4[i][5]*shares + normal[2];
+
+				// I normalize the new normal
+				vertex_normal = normalize(vertex_normal);
+
+				// I assign it to the vertex:
+				vert4[i][3] = vertex_normal[0];
+				vert4[i][4] = vertex_normal[1];
+				vert4[i][5] = vertex_normal[2];
+				
+				// I increment "shares" because now there is another triangle that shares the i-th vertex.
+				shares++;
+
+
+			}
+			
+
+		}
+
+	}
+
 	addMesh(vert4, ind4, color4);
 
 	/*************************************************************************/
