@@ -415,75 +415,74 @@ function buildGeometry() {
 	/*************************************************************************/
 	
 	// Draws a Cylinder --- To do for the assignment.
-	// WARNING: this code is quite a mess but the result is achieved. A more performant version could and should be implemented, but I have
-	//no time to do that.
+	// WARNING: this code is quite a mess but the result is achieved.
+
+	//Radius and height of the cylinder
 	var R = 1.0;
 	var h = 2.0;
 
-	var vert4 = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, h, 0.0, 0.0, 0.0]];
+	//How many triangles form the bases and the sides:
+	var slices = 40;
+	var step = (2*Math.PI) / slices;
+
+	//The cylinder will be built in two different phases: firstly the sides and then the two circular bases.
+	//Let's start from the sides:
+	var vert4 = [];
 	var ind4 = [];
 	var color4 = [1.0, 1.0, 0.0];
 
-	// I will now build algotirhmically the cylinder. The first thing I do is to build the sides of the cylinder.
+	var j=0; //index in the array of vertices
 
-	var slices = 40;
-	var step = (2*Math.PI) / slices;
-	var j=2; //index in the array of vertices
+	for(i = 0; i<2*Math.PI; i = i + step, j++){
 
-
-	for(i = 0; i<2*Math.PI; i = i + step){
-
-		// At first I generate the vertices for the two circular basis.
+		//I build vertices using sin and cos, both from the upper edge and for the lower edge:
 		vert4[j] = [R*Math.sin(i), R*Math.cos(i), 0.0, 0.0, 0.0, 0.0];
 		vert4[j+slices] = [R*Math.sin(i), R*Math.cos(i), h, 0.0, 0.0, 0.0];
 
-		j++;
-
-		// From the second iteration, I add indexing for the triangles of the sides:
-		if (j>2 && j<slices+2){
-
+		//When I have enough vertices to start building the triangles, I add the indexes to the array:
+		if(j>0){
 
 			ind4.push(j, j-1, (j-1)+slices);
-			ind4.push((j-1)+slices, j+slices, j);
+			ind4.push(j, (j-1)+slices, j+slices);
+
+		}
+
+		// This closes the last "hole" in order to have the complete sides:
+		if(j==slices-1){
+
+			ind4.push(0, j, j+slices);
+			ind4.push(0, j+slices, j+1);
 
 		}
 
 
-
-		//This is needed to add the last triangle, in order to connect it to the initial one and not to leave "holes" in the structure.
-		if(j == slices+2){
-
-			ind4.push(2, (j-1), (j-1)+slices);
-			ind4.push((j-1)+slices, 2+slices, 2);
-
-		}
 	}
 
 
 	//Now I will have to compute vertex normals with an algorithm I designed.
 
+	//This is the number of triangles the sides have.
 	var triangles = (ind4.length) / 3;
 
+	
 	for(i=0; i<vert4.length; i++){
 
 		// For each vertex I loop through all the triangles, and, if a triangle has the i-th vertex, I compute the normal of the triangle.
 		// Then I sum the value of the triangle normal to the already existing one of the vertex. The latter is weighted with "shares", in order to
 		// keep track of the number of triangles that share that vertex and obtain an accurate value.
-		//WARNING: i do this only if the triangle is from the sides and not from the basis (see the long if condition.)
+
 		var shares = 0;
 
+		//I loop on the triangles and for each triangle I retrieve the vertices.
 		for(j=0; j<triangles; j++){
 
 			var triangle_vertices = [ind4[(j*3)], ind4[(j*3)+1], ind4[(j*3)+2]];
 
-			//If one of the vertices is the one i=0 or i=1, the triangle is part of the basis and I skip it.
-			if(triangle_vertices.includes(i) && (!triangle_vertices.includes(0) && !triangle_vertices.includes(1))){
+			if(triangle_vertices.includes(i)){
 
 				//If a triangle uses the i-th vertex, I compute the normal of the triangle:
 				var normal = compute_triangle_normal(vert4[triangle_vertices[0]], vert4[triangle_vertices[1]], vert4[triangle_vertices[2]]);
 				normal = normalize(normal);
-
-				//console.log(normal);
 
 				var vertex_normal = [0.0, 0.0, 0.0];
 
@@ -512,47 +511,64 @@ function buildGeometry() {
 	}
 
 
+
 	//Next thing to do is to add to the vertices array the two bases built as independent discs. I follow exactly the same algorithm as
 	//before, but here only the bases are built.
-	var vert4t = [[0.0, 0.0, 0.0, 0.0, 0.0, -1.0], [0.0, 0.0, h, 0.0, 0.0, 1.0]];
+	var vert4t = []
 	var ind4t = [];
+	j = 0;
 
-	j=2; //index in the array of vertices
+	//These are the centres of the two bases.
+	vert4t[j] =  [0.0, 0.0, 0.0, 0.0, 0.0, -1.0];
+	vert4t[j+(slices+1)] = [0.0, 0.0, h, 0.0, 0.0, 1.0];
 
-	for(i = 0; i<2*Math.PI; i = i + step){
+	j = 1; //Index in the array of vertices
 
-		// At first I generate the vertices for the two circular basis.
+	for(i = 0; i<2*Math.PI; i = i + step, j++){
+
+		// This is the generation of the vertices. Notice that the normals here are fixed at -1 and 1.
 		vert4t[j] = [R*Math.sin(i), R*Math.cos(i), 0.0, 0.0, 0.0, -1.0];
-		vert4t[j+slices] = [R*Math.sin(i), R*Math.cos(i), h, 0.0, 0.0, 1.0];
+		vert4t[j+(slices+1)] = [R*Math.sin(i), R*Math.cos(i), h, 0.0, 0.0, 1.0];
 
-		j++;
 
-		// From the second iteration, I add both the indexing for the triangles on the basis.
-		if (j>2 && j<slices+2){
+		// From the second iteration, I have enough points to start the indexing for the triangles on the basis:
+		if (j>1 && j<=slices){
 
-			ind4t.push(0,j-1,j);
-			ind4t.push(1, j+slices, (j-1)+slices);
+			ind4t.push(j, 0, j-1);
+			ind4t.push(j+1+slices, j+slices, slices+1);
 
 		}
-
-
 
 		//This is needed to add the last triangle, in order to connect it to the initial one and not to leave "holes" in the structure.
-		if(j == slices+2){
+		if(j == slices){
 
-
-			//This connects the last vertex to the initial one (the one with index 2, since indexes 0 and 1 contain the centres).
-			ind4t.push(0, j-1, 2);
-			ind4t.push(1,2+slices, (j-1)+slices);
+			ind4t.push(0, j-1, 1);
+			ind4t.push(slices+1, slices+2, slices+j);
 
 		}
+
+
 	}
 
 
-	// Now I appen the new vertices array to the old one, and the new indices array to the old one.
+
+	//Now I append the new vertices array to the old one. In order to make the mesh work correctly, I will have to rescale the values of 
+	//the indices array for the basis: since I am merging two vertices arrays, each with its independent index array, I have to correct the index array
+	//of the appended vertices array in order to make everything match.
+
+	var index_correction_factor = vert4.length;
+
+	vert4 = vert4.concat(vert4t);
+
+	for(i=0; i<ind4t.length; i++){
+
+		ind4t[i] = ind4t[i] + index_correction_factor;
+
+	}
 
 	ind4 = ind4.concat(ind4t);
-	vert4 = vert4.concat(vert4t);
+
+	//Now it is done.
 
 	addMesh(vert4, ind4, color4);
 
