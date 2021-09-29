@@ -32,10 +32,11 @@ var nodesQueue = [[5, 10], [1, 6, 11], [2, 7, 12], [3, 8, 13], [4, 9, 14]];
 
 function buildMatrix(e){
 
-	var transformMatrix = utils.MakeTranslateMatrix(e[0], e[1], e[2]);
-	transformMatrix = utils.multiplyMatrices(transformMatrix, utils.MakeRotateXMatrix(e[3]));
-	transformMatrix = utils.multiplyMatrices(transformMatrix, utils.MakeRotateYMatrix(e[4]));
-	transformMatrix = utils.multiplyMatrices(transformMatrix, utils.MakeRotateZMatrix(e[5]));
+	var transformMatrix = utils.multiplyMatrices(utils.multiplyMatrices(utils.multiplyMatrices(
+		utils.MakeTranslateMatrix(e[0], e[1], e[2]),
+		utils.MakeRotateZMatrix(e[5])),
+		utils.MakeRotateXMatrix(e[3])),
+		utils.MakeRotateYMatrix(e[4]));
 	
 	return transformMatrix;
 }
