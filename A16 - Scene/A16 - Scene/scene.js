@@ -19,38 +19,56 @@ S[i][7] = index of the last child of the i-th node.
 
 If a node does not have any children (he is a leaf), the latter two values are set to -1.
 
-In order to implement correctly the hierarchy, a stack structure will be used. First of all we will check 
-if a node has children. If it has children, its world matrix is computed and then passed to the child 
-in order to compute its own world matrix and so on.
+NOTE:
+A better version of the algorithm can be obtained by implemented an automatic tree traversing. This version
+uses a hardcoded list of nodes, one for each finger, in order to perform the computation. This is feasible 
+since the number of elements is small and the specification was clear, but in more complex models this is
+not the right approach.
 
 */
 
+
+var nodesQueue = [[5, 10], [1, 6, 11], [2, 7, 12], [3, 8, 13], [4, 9, 14]];
+
+function buildMatrix(e){
+
+	var transformMatrix = utils.MakeTranslateMatrix(e[0], e[1], e[2]);
+	transformMatrix = utils.multiplyMatrices(transformMatrix, utils.MakeRotateXMatrix(e[3]));
+	transformMatrix = utils.multiplyMatrices(transformMatrix, utils.MakeRotateYMatrix(e[4]));
+	transformMatrix = utils.multiplyMatrices(transformMatrix, utils.MakeRotateZMatrix(e[5]));
+	
+	return transformMatrix;
+}
+
+
 function drawSceneTree(S) {
 
-	stackHierarchy(S, 0);
+	var i = 0;
+
+	var parentMatrix = buildMatrix(S[0]);
+	draw(0, parentMatrix);
+
+	for(i=0; i<5; i++){
+
+		stackHierarchy(S, parentMatrix, i);
+	}
 
 }
 
-function stackHierarchy(S, i){
 
-	// Cosa deve fare la funzione: implemenare una DFS sull'albero: la visita del nodo include la
-	//moltiplicazione della matrice ereditata dal padre per quella del figlio.
-	transformMatrix = utils.identityMatrix();
+function stackHierarchy(S, parentMatrix, finger){
 
-	// Base case: the node does not have children anymore
-	if(S[i][6] == -1 & S[i][7] == -1){
 
-		transformMatrix = utils.multiplyMatrices(transformMatrix, 
-			utils.multiplyMatrices(utils.MakeTranslateMatrix(S[i][0], S[i][1], S[i][2]),
-			utils.multiplyMatrices(utils.MakeRotateXMatrix)(S[i][3]),
-			utils.multiplyMatrices(utils.MakeRotateYMatrix)(S[i][3]),
-			utils.multiplyMatrices(utils.MakeRotateZMatrix)(S[i][3])));
-			
+	var i = 0;
+
+	for(i = 0; i < nodesQueue[finger].length; i++){
+
+		var nodeIndex = nodesQueue[finger][i];
+		var childMatrix = utils.multiplyMatrices(parentMatrix, buildMatrix(S[nodeIndex]));
+		draw(nodeIndex, childMatrix);
+		parentMatrix = childMatrix;
 
 	}
 
 
-	//If the node has children:
-	
-	draw(i, transformMatrix);
 }
